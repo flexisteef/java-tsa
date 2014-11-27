@@ -1,4 +1,4 @@
-package com.ibb.seven.rcp.ticklers;
+package com.ibb.seven.rcp.ticklers.TicklerScanApi;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
