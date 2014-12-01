@@ -1,14 +1,14 @@
 package com.ibb.seven.rcp.ticklers.TicklerScanApi;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * @author IBB
@@ -21,16 +21,15 @@ public class TicklerScanApi
 		private String	RegexAbsoluteDate	= "(\\*\\*[0-99]{1,}([-]|[\\/])[0-99]{1,}([-]|[\\/])\\d{4})";
 		private String	TicklerStr, AbsoluteDateStr, currentDate, country = null;
 
-		int				days, weeks, months, years = 0;
-		int				CDays, CMonths, CYears = 0;
-		int				ADays, AMonths, AYears = 0;
-		int				finalDays, finalMonths, finalYears;
-		String 			finalTickler = null;
-		
-		public String getTicklerDate(String Note)
+		private int		days, weeks, months, years = 0;
+		private int		ADays, AMonths, AYears = 0;
+		private int		finalDays, finalMonths, finalYears;
+
+		private DateTime	newDate;
+
+		public DateTime getTicklerDate(String Note)
 			{
 				int checkScan = ScanNote(Note);
-				String dateStr;
 				if (checkScan != 0)
 					{
 						if (TicklerStr != null)
@@ -46,7 +45,7 @@ public class TicklerScanApi
 						currentDate();
 						splitTickler();
 						CalculateDate();
-						return (getTicklerStr() != null ) ? getFinalTickler() : getAbsoluteDateStr().toString();
+						return getNewDate();
 					}
 				else
 					{
@@ -59,7 +58,7 @@ public class TicklerScanApi
 		 * 
 		 * ScanNote: input regex, note return string tickler
 		 */
-		public int ScanNote(String Note)
+		private int ScanNote(String Note)
 			{
 				String result = null;
 				String currentLine = null;
@@ -104,7 +103,7 @@ public class TicklerScanApi
 		 * 
 		 * Removes the ** from the date string
 		 */
-		public static String adjust(String dateStr) 	// dateStr = tickler or absolute
+		private static String adjust(String dateStr) 	// dateStr = tickler or absolute
 			{
 				String newData = null;
 				String regex = "[^\\*\\*]{2,}"; // removes **
@@ -130,10 +129,11 @@ public class TicklerScanApi
 		 * AbsoluteMonths. ect.
 		 */
 
-		public void splitTickler()
+		private void splitTickler()
 			{
-				String converter = "0";
-				int tempInt, j = 0;
+				String tempStr = "0";
+				int tempInt = 0;
+				int j = 0;
 				int[] dateArray;
 				String dateStr = (getTicklerStr() != null) ? getTicklerStr() : getAbsoluteDateStr();
 				char[] splitDate = new char[dateStr.length()];
@@ -153,44 +153,33 @@ public class TicklerScanApi
 									{
 									case 'd':
 									case 'D':
-										tempInt = Integer.parseInt(converter);
-										dateArray[j] = tempInt;
-										System.out.print(dateArray[j] + " day(s)");
-										setDays(dateArray[j]);
+										setDays(convertSplitDate(tempStr, " day(s)"));
 										j++;
-										converter = "0";
+										tempStr = "0";
 										break;
 									case 'w':
 									case 'W':
-										tempInt = Integer.parseInt(converter);
-										dateArray[j] = tempInt;
-										System.out.print(" - " + dateArray[j] + " week(s)");
-										setWeeks(dateArray[j]);
+										setWeeks(convertSplitDate(tempStr, " week(s)"));
 										j++;
-										converter = "0";
+										tempStr = "0";
 										break;
 									case 'm':
 									case 'M':
-										tempInt = Integer.parseInt(converter);
-										dateArray[j] = tempInt;
-										System.out.print(" - " + dateArray[j] + " month(s)");
-										setMonths(dateArray[j]);
+										setMonths(convertSplitDate(tempStr, " month(s)"));
 										j++;
-										converter = "0";
+										tempStr = "0";
 										break;
 									case 'y':
 									case 'Y':
-										tempInt = Integer.parseInt(converter);
-										dateArray[j] = tempInt;
-										System.out.print(" - " + dateArray[j] + " year(s)");
-										setYears(dateArray[j]);
+										setYears(convertSplitDate(tempStr, " year(s)"));
 										j++;
-										converter = "0";
+										tempStr = "0";
 										break;
 									default:
-										converter += splitDate[i];
+										tempStr += splitDate[i];
 									}
 							}
+						System.out.println();
 					}
 				else
 					{
@@ -202,7 +191,7 @@ public class TicklerScanApi
 									{
 									case '/':
 									case '-':
-										tempInt = Integer.parseInt(converter);
+										tempInt = Integer.parseInt(tempStr);
 										dateArray[j] = tempInt;
 										switch (j)
 											{
@@ -216,7 +205,7 @@ public class TicklerScanApi
 														setAMonths(dateArray[j]);
 													}
 												j++;
-												converter = "0";
+												tempStr = "0";
 												break;
 											case 1:
 												if ((getCountry() == "nl") | (getCountry() == "NL"))
@@ -228,132 +217,139 @@ public class TicklerScanApi
 														setADays(dateArray[j]);
 													}
 												j++;
-												converter = "0";
+												tempStr = "0";
 												break;
 											}
 										break;
 									default:
-										converter += splitDate[i];
+										tempStr += splitDate[i];
 									}
 							}
-						tempInt = Integer.parseInt(converter);
+						tempInt = Integer.parseInt(tempStr);
 						dateArray[j] = tempInt;
 						setAYears(dateArray[j]);
 					}
 			}
 
-		public void CalculateDate()
+		private void CalculateDate()
 			{
 				calculateTickler();
 				calculateDifference();
 			}
 
-		public String calculateTickler()
+		private void calculateTickler()
 			{
-				String total = "0";
-				if(getTicklerStr() != null)
-					{
-				
-				setFinalDays(getDays());
-				if (getWeeks() >= 4) // if there are 4 or more weeks. The weeks will be
-										// separated into months and days
-					{
-						if ((getWeeks() % 4) == 0) //
-							{
-								setFinalMonths(getFinalMonths() + (getWeeks() / 4));
-								// all weeks will change to months
-							}
-						else
-							{
-								setFinalMonths(getFinalMonths() + (getWeeks() / 4));
-								setWeeks((getWeeks() % 4)); // remaining weeks will be
-															// changed to days
-								setFinalDays((getDays() + (getWeeks() * 7)));
-							}
-					}
-				// else the weeks will be multiplied by 7.
-				// this is to get rid of the weeks variable.
-				setFinalMonths(getFinalMonths() + getMonths());
-				if (getFinalMonths() >= 12) // if months is 12 or above, the months will
-											// be translated to years and remaing
-				// months
-					{
-						if ((getFinalMonths() % 12) == 0)
-							{
-								setFinalYears(getYears() + (getFinalMonths() / 12));
-								setFinalMonths(0);
-							}
-						setFinalYears(getYears() + ((getFinalMonths() / 12)));
-						setFinalMonths((getFinalMonths() % 12));
-					}
-				else
-					setFinalYears(getYears() + getFinalYears());
-
-				// makes a string date of currentdate. // nothing more.
-				total = Integer.toString(getFinalDays());
-				total += "-";
-				total += Integer.valueOf(getFinalMonths()).toString();
-				total += "-";
-				total += Integer.valueOf(getFinalYears()).toString();
-				System.out.println("\n-------------------------\ntotal days: \t" + getFinalDays());
-				System.out.println("total months: \t" + getFinalMonths());
-				System.out.println("total years: \t" + getFinalYears() + "\n-------------------------");
-				System.out.println("tickler adds: \t" + total + "\n-------------------------");
-			
-			}
-				return total;
-			}
-
-		public void calculateDifference()
-			{
-				String formatStr = (getCountry() == "US") ? "MM/dd/yyyy" : "dd-MM-yyyy";
-				// default is NL format
-				DateFormat dF1 = new SimpleDateFormat(formatStr); // format for calendar
-				dF1.setLenient(false); // makes validation more strict
-				Calendar currentCalendar = new GregorianCalendar(); // make object
-																	// calendar
-				currentCalendar = Calendar.getInstance(); // put current time in calendar
-				String ticklerDate = dF1.format(currentCalendar.getTime()); // format time
-																			// to nl or us
-																			// dateformat
-				System.out.println("current date: \t\t\t" + ticklerDate);
 
 				if (getTicklerStr() != null)
 					{
-						System.out.println("days that will be added: \t" + getFinalDays());
-						currentCalendar.add(Calendar.DAY_OF_MONTH, getFinalDays());// adds
-																					// ticklerdays
 
-						System.out.println("months that will be added: \t    " + getFinalMonths());
-						currentCalendar.add(Calendar.MONTH, getFinalMonths());// adds
-																				// ticklermonths
+						setFinalDays(getDays());
+						if (getWeeks() >= 4)
+							{
+								if ((getWeeks() % 4) == 0) //
+									{
+										setFinalMonths(getFinalMonths() + (getWeeks() / 4));
 
-						System.out.println("years that will be added: \t\t" + getFinalYears());
-						currentCalendar.add(Calendar.YEAR, getFinalYears()); // adds
-																				// tickleryears
-						ticklerDate = dF1.format(currentCalendar.getTime());
-						// put new date in calStr var
-						System.out.println("new date: \t\t\t" + ticklerDate);
-						setFinalTickler(ticklerDate);
+									}
+								else
+									{
+										/* remaining weeks will be changed to days */
+										setFinalMonths(getFinalMonths() + (getWeeks() / 4));
+										setWeeks((getWeeks() % 4));
+										setFinalDays((getDays() + (getWeeks() * 7)));
+									}
+							}
+						setFinalMonths(getFinalMonths() + getMonths());
+						/*
+						 * if months is 12 or above, the months will be translated to
+						 * years and remaing
+						 */
+						if (getFinalMonths() >= 12)
+
+							{
+								if ((getFinalMonths() % 12) == 0)
+									{
+										setFinalYears(getYears() + (getFinalMonths() / 12));
+										setFinalMonths(0);
+									}
+								setFinalYears(getYears() + ((getFinalMonths() / 12)));
+								setFinalMonths((getFinalMonths() % 12));
+							}
+						else
+							setFinalYears(getYears() + getFinalYears());
+					}
+
+			}
+
+		private void calculateDifference()
+			{
+
+				final String formatStr = (getCountry() == "US") ? "MM-dd-yyyy" : "dd-MM-yyyy";
+				DateTimeFormatter dfm = DateTimeFormat.forPattern(formatStr);
+				dfm = (getCountry() == "US") ? dfm.withLocale(Locale.US) : dfm.withLocale(Locale.GERMAN);
+				final DateTime currentDateTime = dfm.withOffsetParsed().parseDateTime(getCurrentDate());
+
+				if (getTicklerStr() != null)
+					{
+						DateTime ticklerDateTime = dfm.withOffsetParsed().parseDateTime(getCurrentDate());
+						System.out.println("--------------------------");
+						System.out.println("days that will be added: \t\t\t" + getFinalDays());
+
+						ticklerDateTime = ticklerDateTime.plusDays(getFinalDays());
+						System.out.println("months that will be added: \t\t\t    " + getFinalMonths());
+
+						ticklerDateTime = ticklerDateTime.plusMonths(getFinalMonths());
+						System.out.println("years that will be added: \t\t\t\t" + getFinalYears());
+
+						ticklerDateTime = ticklerDateTime.plusYears(getFinalYears());
+						String ticklerDate = dfm.print(ticklerDateTime);
+						String currentDate = dfm.print(currentDateTime);
+
+						System.out.println("currentdate: \t\t\t\t\t" + currentDate);
+						System.out.println("--------------------------" + "\t\t\t-----------+");
+						System.out.println("tickler final date in String: \t\t\t" + ticklerDate);
+						System.out.println("tickler final date in DateTime : \t\t" + ticklerDateTime);
+						setNewDate(ticklerDateTime);
 					}
 				else
 					{
-						//DateFormat dF2 = new SimpleDateFormat(formatStr);
-						dF1.setLenient(false); // makes validation more strict
-						Calendar absoluteCalendar = new GregorianCalendar();
-						// absoluteCalendar = absoluteCalendar.getInstance(); // put
-						// current time in calendar
-						absoluteCalendar.set(getAYears(), (getAMonths() - 1), getADays());
-						String absoluteCalendarStr = dF1.format(absoluteCalendar.getTime());
-						System.out.println("absolute date: \t\t\t" + absoluteCalendarStr);
-						setAbsoluteDateStr(absoluteCalendarStr);
+						String tempStr = getAbsoluteDateStr().replaceAll("/", "-");
+						
+						if (getCountry() == "US")
+							{
+								try
+									{
+										DateTime absoluteDateTime = dfm.parseDateTime(tempStr);
+										System.out.println("absolute date: " + absoluteDateTime);
+										setNewDate(absoluteDateTime);
+									}
+								catch (IllegalArgumentException e)
+									{
+										System.out.println("invalid absolute date.");
+									}
+							}
+						else
+							{
+								try
+									{
+										//absoluteDateTime = new DateTime(getAYears(), getAMonths(), getADays(), 0, 0);
+										
+										DateTime absoluteDateTime = dfm.parseDateTime(tempStr);
+										System.out.println("absolute date: " + absoluteDateTime);
+										setNewDate(absoluteDateTime);
+									}
+								catch (IllegalArgumentException e)
+									{
+										System.out.println("invalid absolute date.");
+									}
+							}
 					}
 			}
 
 		/*
 		 * Find what country / date format the OS uses. Country will be US or NL.
 		 */
-		public void findLocalDate()
+		private void findLocalDate()
 			{
 				System.out.println("sun.locale.formatasdefault in debug configuration: "
 						+ System.getProperty("sun.locale.formatasdefault"));
@@ -366,7 +362,7 @@ public class TicklerScanApi
 		 * Get current date. setCurrentDate() is output. default is NL format
 		 */
 
-		public void currentDate()  // method to get current date
+		private void currentDate()  // method to get current date
 			{
 				String dateFormat = (getCountry() == "US") ? "MM-dd-yyyy" : "dd-MM-yyyy";
 				System.out.print("current time: ");
@@ -375,184 +371,167 @@ public class TicklerScanApi
 			}
 
 		/*
+		 * Input is date in Str. Adds zero's for example: 06-02-2014 Output is date in in.
+		 */
+		private int convertSplitDate(String converter, String date)
+			{
+				int tempInt = 0;
+				tempInt = Integer.parseInt(converter);
+				System.out.print(tempInt + date + " ");
+				return tempInt;
+			}
+
+		/*
 		 * getters and setters
 		 */
-		public String getTicklerStr()
+		private String getTicklerStr()
 			{
 				return TicklerStr;
 			}
 
-		public void setTicklerStr(String ticklerStr)
+		private void setTicklerStr(String ticklerStr)
 			{
 				TicklerStr = ticklerStr;
 			}
 
-		public String getAbsoluteDateStr()
+		private String getAbsoluteDateStr()
 			{
 				return AbsoluteDateStr;
 			}
 
-		public void setAbsoluteDateStr(String absoluteDateStr)
+		private void setAbsoluteDateStr(String absoluteDateStr)
 			{
 				AbsoluteDateStr = absoluteDateStr;
 			}
 
-		public String getCountry()
+		private String getCountry()
 			{
 				return country;
 			}
 
-		public void setCountry(String country)
+		private void setCountry(String country)
 			{
 				this.country = country;
 			}
 
-		public String getCurrentDate()
+		private String getCurrentDate()
 			{
 				return currentDate;
 			}
 
-		public void setCurrentDate(String currentDate)
+		private void setCurrentDate(String currentDate)
 			{
 				this.currentDate = currentDate;
 			}
 
-		public int getDays()
+		private int getDays()
 			{
 				return days;
 			}
 
-		public void setDays(int days)
+		private void setDays(int days)
 			{
 				this.days = days;
 			}
 
-		public int getWeeks()
+		private int getWeeks()
 			{
 				return weeks;
 			}
 
-		public void setWeeks(int weeks)
+		private void setWeeks(int weeks)
 			{
 				this.weeks = weeks;
 			}
 
-		public int getMonths()
+		private int getMonths()
 			{
 				return months;
 			}
 
-		public void setMonths(int months)
+		private void setMonths(int months)
 			{
 				this.months = months;
 			}
 
-		public int getYears()
+		private int getYears()
 			{
 				return years;
 			}
 
-		public void setYears(int years)
+		private void setYears(int years)
 			{
 				this.years = years;
 			}
 
-		public int getCDays()
-			{
-				return CDays;
-			}
-
-		public void setCDays(int cDays)
-			{
-				CDays = cDays;
-			}
-
-		public int getCMonths()
-			{
-				return CMonths;
-			}
-
-		public void setCMonths(int cMonths)
-			{
-				CMonths = cMonths;
-			}
-
-		public int getCYears()
-			{
-				return CYears;
-			}
-
-		public void setCYears(int cYears)
-			{
-				CYears = cYears;
-			}
-
-		public int getADays()
+		private int getADays()
 			{
 				return ADays;
 			}
 
-		public void setADays(int aDays)
+		private void setADays(int aDays)
 			{
 				ADays = aDays;
 			}
 
-		public int getAMonths()
+		private int getAMonths()
 			{
 				return AMonths;
 			}
 
-		public void setAMonths(int aMonths)
+		private void setAMonths(int aMonths)
 			{
 				AMonths = aMonths;
 			}
 
-		public int getAYears()
+		private int getAYears()
 			{
 				return AYears;
 			}
 
-		public void setAYears(int aYears)
+		private void setAYears(int aYears)
 			{
 				AYears = aYears;
 			}
 
-		public int getFinalDays()
+		private int getFinalDays()
 			{
 				return finalDays;
 			}
 
-		public void setFinalDays(int finalDays)
+		private void setFinalDays(int finalDays)
 			{
 				this.finalDays = finalDays;
 			}
 
-		public int getFinalMonths()
+		private int getFinalMonths()
 			{
 				return finalMonths;
 			}
 
-		public void setFinalMonths(int finalMonths)
+		private void setFinalMonths(int finalMonths)
 			{
 				this.finalMonths = finalMonths;
 			}
 
-		public int getFinalYears()
+		private int getFinalYears()
 			{
 				return finalYears;
 			}
 
-		public void setFinalYears(int finalYears)
+		private void setFinalYears(int finalYears)
 			{
 				this.finalYears = finalYears;
 			}
-		public String getFinalTickler()
+
+		private void setNewDate(DateTime ticklerDateTime)
 			{
-				return finalTickler;
+				this.newDate = ticklerDateTime;
 			}
-		public void setFinalTickler(String finalTickler)
+
+		private DateTime getNewDate()
 			{
-				this.finalTickler = finalTickler;
+				return newDate;
 			}
 
 	}
