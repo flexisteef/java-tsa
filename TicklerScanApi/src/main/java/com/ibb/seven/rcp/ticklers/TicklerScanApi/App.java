@@ -2,6 +2,9 @@ package com.ibb.seven.rcp.ticklers.TicklerScanApi;
 
 import java.util.Scanner;
 
+import org.joda.time.DateTime;
+
+
 /**
  * Hello world!
  *
@@ -12,7 +15,8 @@ public class App
     {
         System.out.println( "Hello World!" );
         TicklerScanApi ticklerscan = new TicklerScanApi();
-        String A = ticklerscan.getTicklerDate("**1d");
+        DateTime A = (ticklerscan.getTicklerDate("asda **2d"));
+        System.out.println(A);
         Scanner sc = new Scanner(System.in);
         
         sc.nextLine();

@@ -10,6 +10,16 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.core.joran.action.StatusListenerAction;
+import ch.qos.logback.core.util.StatusPrinter;
+import ch.qos.logback.core.ConsoleAppender;
+import ch.qos.logback.classic.LoggerContext;
+
+
 /**
  * @author IBB
  * 
@@ -19,20 +29,25 @@ public class TicklerScanApi
 	{
 		private String	RegexTickler		= "\\*\\*(([0-99])+([dD]|[wW]|[mM]|[yY])(([0-99]){1,}([wW]|[mM]|[yY]))?(([0-99]){1,}([mM]|[yY]))?(([0-99]){1,}[yY])?)";
 		private String	RegexAbsoluteDate	= "(\\*\\*[0-99]{1,}([-]|[\\/])[0-99]{1,}([-]|[\\/])\\d{4})";
-		private String	TicklerStr, AbsoluteDateStr, currentDate, country = null;
+		private String	ticklerStr, absoluteDateStr, currentDate, country = null;
 
 		private int		days, weeks, months, years = 0;
-		private int		ADays, AMonths, AYears = 0;
+		private int		aDays, aMonths, aYears = 0;
 		private int		finalDays, finalMonths, finalYears;
 
 		private DateTime	newDate;
+		private String logStr = "com.ibb.seven.rcp.ticklers.TicklerScanApi.";
+		private Logger logger = (Logger) LoggerFactory.getLogger(logStr) ;
 
 		public DateTime getTicklerDate(String Note)
 			{
-				int checkScan = ScanNote(Note);
+		
+				
+				changeLogStr("getTicklerDate");
+				int checkScan = scanNote(Note);
 				if (checkScan != 0)
 					{
-						if (TicklerStr != null)
+						if (ticklerStr != null)
 							{
 								setTicklerStr(adjust(getTicklerStr()));
 							}
@@ -40,16 +55,24 @@ public class TicklerScanApi
 							{
 								setAbsoluteDateStr(adjust(getAbsoluteDateStr()));
 							}
-						System.out.println(getTicklerStr());
+						logger.debug(getTicklerStr());
+						
+						
 						findLocalDate();
 						currentDate();
 						splitTickler();
-						CalculateDate();
+						calculateDate();
+						
+						
+//						 LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+//						 StatusPrinter.print(lc);
+						LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+						loggerContext.stop();
 						return getNewDate();
 					}
 				else
 					{
-						System.out.println("No tickler and absolute date found.");
+						logger.warn("No tickler and absolute date found.");
 						return null;
 					}
 			}
@@ -58,8 +81,9 @@ public class TicklerScanApi
 		 * 
 		 * ScanNote: input regex, note return string tickler
 		 */
-		private int ScanNote(String Note)
+		private int scanNote(String Note)
 			{
+				changeLogStr("scanNote");
 				String result = null;
 				String currentLine = null;
 				String[] regexArray =
@@ -86,12 +110,13 @@ public class TicklerScanApi
 								if (i == 0)
 									{
 										setTicklerStr(result);
-										System.out.println(getTicklerStr());
+										logger.debug(getTicklerStr());
 									}
 								else
 									{
 										setAbsoluteDateStr(result);
-										System.out.println(getAbsoluteDateStr());
+										logger.debug(getAbsoluteDateStr());
+										
 									}
 								return 1;
 							}
@@ -103,8 +128,9 @@ public class TicklerScanApi
 		 * 
 		 * Removes the ** from the date string
 		 */
-		private static String adjust(String dateStr) 	// dateStr = tickler or absolute
+		private String adjust(String dateStr) 	// dateStr = tickler or absolute
 			{
+				changeLogStr("adjust");
 				String newData = null;
 				String regex = "[^\\*\\*]{2,}"; // removes **
 				try
@@ -119,7 +145,8 @@ public class TicklerScanApi
 					}
 				catch (Exception e)
 					{
-						System.out.print(e);
+						logger.error(e.toString());
+						
 					}
 				return newData;
 			}
@@ -131,6 +158,7 @@ public class TicklerScanApi
 
 		private void splitTickler()
 			{
+				changeLogStr("splitTickler");
 				String tempStr = "0";
 				int tempInt = 0;
 				int j = 0;
@@ -138,13 +166,13 @@ public class TicklerScanApi
 				String dateStr = (getTicklerStr() != null) ? getTicklerStr() : getAbsoluteDateStr();
 				char[] splitDate = new char[dateStr.length()];
 				splitDate = dateStr.toCharArray();
-				System.out.println("size of array:  " + dateStr.length());
+				logger.debug("size of array:  " + dateStr.length());
 				if (getTicklerStr() != null)
 					{
 						dateArray = new int[(getTicklerStr().length() - (getTicklerStr().length() / 2))];
 
-						System.out.println("size of new array: " + dateArray.length);
-						System.out.print("tickler adds: ");
+						logger.debug("size of new array:" + dateArray.length);
+						logger.info("tickler adds: ");
 						// --------
 						for (int i = 0; i < dateStr.length(); i++)
 						// first position of array is 'days' second is 'weeks' ect.
@@ -230,8 +258,7 @@ public class TicklerScanApi
 						setAYears(dateArray[j]);
 					}
 			}
-
-		private void CalculateDate()
+		private void calculateDate()
 			{
 				calculateTickler();
 				calculateDifference();
@@ -239,10 +266,9 @@ public class TicklerScanApi
 
 		private void calculateTickler()
 			{
-
+				changeLogStr("calculateTickler");
 				if (getTicklerStr() != null)
 					{
-
 						setFinalDays(getDays());
 						if (getWeeks() >= 4)
 							{
@@ -278,12 +304,11 @@ public class TicklerScanApi
 						else
 							setFinalYears(getYears() + getFinalYears());
 					}
-
 			}
 
 		private void calculateDifference()
 			{
-
+				changeLogStr("calculateDifference");
 				final String formatStr = (getCountry() == "US") ? "MM-dd-yyyy" : "dd-MM-yyyy";
 				DateTimeFormatter dfm = DateTimeFormat.forPattern(formatStr);
 				dfm = (getCountry() == "US") ? dfm.withLocale(Locale.US) : dfm.withLocale(Locale.GERMAN);
@@ -292,27 +317,28 @@ public class TicklerScanApi
 				if (getTicklerStr() != null)
 					{
 						DateTime ticklerDateTime = dfm.withOffsetParsed().parseDateTime(getCurrentDate());
-						System.out.println("--------------------------");
-						System.out.println("days that will be added: \t\t\t" + getFinalDays());
+						logger.debug("--------------------------");
+						logger.debug("days that will be added: \t" + getFinalDays());
 
 						ticklerDateTime = ticklerDateTime.plusDays(getFinalDays());
-						System.out.println("months that will be added: \t\t\t    " + getFinalMonths());
+						logger.debug("months that will be added: \t    " + getFinalMonths());
 
 						ticklerDateTime = ticklerDateTime.plusMonths(getFinalMonths());
-						System.out.println("years that will be added: \t\t\t\t" + getFinalYears());
+						logger.debug("years that will be added: \t\t" + getFinalYears());
 
 						ticklerDateTime = ticklerDateTime.plusYears(getFinalYears());
 						String ticklerDate = dfm.print(ticklerDateTime);
 						String currentDate = dfm.print(currentDateTime);
 
-						System.out.println("currentdate: \t\t\t\t\t" + currentDate);
-						System.out.println("--------------------------" + "\t\t\t-----------+");
-						System.out.println("tickler final date in String: \t\t\t" + ticklerDate);
-						System.out.println("tickler final date in DateTime : \t\t" + ticklerDateTime);
+						logger.debug("currentdate: \t\t" + currentDate);
+						logger.debug("--------------------------" + "\t-----------+");
+						logger.info("tickler final date in String: " + ticklerDate);
+						logger.info("tickler final date in DateTime : " + ticklerDateTime);
 						setNewDate(ticklerDateTime);
 					}
 				else
 					{
+						/*set absolutedate to DateTime, replace / with - if date is in US format*/
 						String tempStr = getAbsoluteDateStr().replaceAll("/", "-");
 						
 						if (getCountry() == "US")
@@ -320,12 +346,12 @@ public class TicklerScanApi
 								try
 									{
 										DateTime absoluteDateTime = dfm.parseDateTime(tempStr);
-										System.out.println("absolute date: " + absoluteDateTime);
+										logger.info("absolute date: " + absoluteDateTime);
 										setNewDate(absoluteDateTime);
 									}
 								catch (IllegalArgumentException e)
 									{
-										System.out.println("invalid absolute date.");
+										logger.error("invalid absolute date.");
 									}
 							}
 						else
@@ -333,28 +359,27 @@ public class TicklerScanApi
 								try
 									{
 										//absoluteDateTime = new DateTime(getAYears(), getAMonths(), getADays(), 0, 0);
-										
 										DateTime absoluteDateTime = dfm.parseDateTime(tempStr);
-										System.out.println("absolute date: " + absoluteDateTime);
+										logger.info("absolute date: " + absoluteDateTime);
 										setNewDate(absoluteDateTime);
 									}
 								catch (IllegalArgumentException e)
 									{
-										System.out.println("invalid absolute date.");
+										logger.error("invalid absolute date.");
 									}
 							}
 					}
 			}
-
 		/*
 		 * Find what country / date format the OS uses. Country will be US or NL.
 		 */
 		private void findLocalDate()
 			{
-				System.out.println("sun.locale.formatasdefault in debug configuration: "
+				changeLogStr("findLocalDate");
+				logger.debug("sun.locale.formatasdefault in debug configuration: "
 						+ System.getProperty("sun.locale.formatasdefault"));
 				String locale = Locale.getDefault().getCountry();// get local. US or NL
-				System.out.println("date format set for: " + locale);
+				logger.info("date format set for: " + locale);
 				setCountry(locale);
 			}
 
@@ -364,10 +389,10 @@ public class TicklerScanApi
 
 		private void currentDate()  // method to get current date
 			{
+				changeLogStr("currentDate");
 				String dateFormat = (getCountry() == "US") ? "MM-dd-yyyy" : "dd-MM-yyyy";
-				System.out.print("current time: ");
 				setCurrentDate(new SimpleDateFormat(dateFormat).format(Calendar.getInstance().getTime()));
-				System.out.println(getCurrentDate());
+				logger.info("current time: {}", getCurrentDate());
 			}
 
 		/*
@@ -375,10 +400,19 @@ public class TicklerScanApi
 		 */
 		private int convertSplitDate(String converter, String date)
 			{
+				changeLogStr("convertSplitDate");
 				int tempInt = 0;
 				tempInt = Integer.parseInt(converter);
-				System.out.print(tempInt + date + " ");
+				logger.info(tempInt + date + " ");
 				return tempInt;
+			}
+		private void changeLogStr(String add)
+			{
+				setLogStr("com.ibb.seven.rcp.ticklers.TicklerScanApi.");
+				setLogStr(getLogStr() + add);
+				
+				setLogger((Logger) LoggerFactory.getLogger(getLogStr()));	
+				logger.debug("LogStr is:" + getLogStr());
 			}
 
 		/*
@@ -386,22 +420,22 @@ public class TicklerScanApi
 		 */
 		private String getTicklerStr()
 			{
-				return TicklerStr;
+				return ticklerStr;
 			}
 
-		private void setTicklerStr(String ticklerStr)
+		private void setTicklerStr(String ticklerstr)
 			{
-				TicklerStr = ticklerStr;
+				ticklerStr = ticklerstr;
 			}
 
 		private String getAbsoluteDateStr()
 			{
-				return AbsoluteDateStr;
+				return absoluteDateStr;
 			}
 
-		private void setAbsoluteDateStr(String absoluteDateStr)
+		private void setAbsoluteDateStr(String absolutedateStr)
 			{
-				AbsoluteDateStr = absoluteDateStr;
+				absoluteDateStr = absolutedateStr;
 			}
 
 		private String getCountry()
@@ -466,32 +500,32 @@ public class TicklerScanApi
 
 		private int getADays()
 			{
-				return ADays;
+				return aDays;
 			}
 
-		private void setADays(int aDays)
+		private void setADays(int adays)
 			{
-				ADays = aDays;
+				aDays = adays;
 			}
 
 		private int getAMonths()
 			{
-				return AMonths;
+				return aMonths;
 			}
 
-		private void setAMonths(int aMonths)
+		private void setAMonths(int amonths)
 			{
-				AMonths = aMonths;
+				aMonths = amonths;
 			}
 
 		private int getAYears()
 			{
-				return AYears;
+				return aYears;
 			}
 
-		private void setAYears(int aYears)
+		private void setAYears(int ayears)
 			{
-				AYears = aYears;
+				aYears = ayears;
 			}
 
 		private int getFinalDays()
@@ -533,5 +567,20 @@ public class TicklerScanApi
 			{
 				return newDate;
 			}
-
+		public String getLogStr()
+			{
+				return logStr;
+			}
+		public void setLogStr(String logStr)
+			{
+				this.logStr = logStr;
+			}
+		public Logger getLogger()
+			{
+				return logger;
+			}
+		public void setLogger(Logger logger)
+			{
+				this.logger = (logger);
+			}
 	}
