@@ -17,8 +17,9 @@
 
 		</filter>
 		<encoder>
-			<pattern>[%d{HH:mm:ss.SSS}]%-5level %logger{0} \t - %msg %n</pattern>
+			<pattern>[%d{HH:mm}] - [%-5level] - %logger{0} \t - %msg %n</pattern>
 		</encoder>
+		
 	</appender>
 
 	<logger name="INFO" additivity="false" level="INFO">

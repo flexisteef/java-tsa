@@ -14,10 +14,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.core.joran.action.StatusListenerAction;
-import ch.qos.logback.core.util.StatusPrinter;
-import ch.qos.logback.core.ConsoleAppender;
-import ch.qos.logback.classic.LoggerContext;
+
 
 
 /**
@@ -209,54 +206,54 @@ public class TicklerScanApi
 							}
 						System.out.println();
 					}
-				else
-					{
-						splitDate = dateStr.toCharArray();
-						dateArray = new int[getAbsoluteDateStr().length()];
-						for (int i = 0; i < getAbsoluteDateStr().length(); i++)
-							{
-								switch (splitDate[i])
-									{
-									case '/':
-									case '-':
-										tempInt = Integer.parseInt(tempStr);
-										dateArray[j] = tempInt;
-										switch (j)
-											{
-											case 0:
-												if ((getCountry() == "nl") | (getCountry() == "NL"))
-													{
-														setADays(dateArray[j]);
-													}
-												else
-													{
-														setAMonths(dateArray[j]);
-													}
-												j++;
-												tempStr = "0";
-												break;
-											case 1:
-												if ((getCountry() == "nl") | (getCountry() == "NL"))
-													{
-														setAMonths(dateArray[j]);
-													}
-												else
-													{
-														setADays(dateArray[j]);
-													}
-												j++;
-												tempStr = "0";
-												break;
-											}
-										break;
-									default:
-										tempStr += splitDate[i];
-									}
-							}
-						tempInt = Integer.parseInt(tempStr);
-						dateArray[j] = tempInt;
-						setAYears(dateArray[j]);
-					}
+				
+//					{
+//						splitDate = dateStr.toCharArray();
+//						dateArray = new int[getAbsoluteDateStr().length()];
+//						for (int i = 0; i < getAbsoluteDateStr().length(); i++)
+//							{
+//								switch (splitDate[i])
+//									{
+//									case '/':
+//									case '-':
+//										tempInt = Integer.parseInt(tempStr);
+//										dateArray[j] = tempInt;
+//										switch (j)
+//											{
+//											case 0:
+//												if ((getCountry() == "nl") | (getCountry() == "NL"))
+//													{
+//														setADays(dateArray[j]);
+//													}
+//												else
+//													{
+//														setAMonths(dateArray[j]);
+//													}
+//												j++;
+//												tempStr = "0";
+//												break;
+//											case 1:
+//												if ((getCountry() == "nl") | (getCountry() == "NL"))
+//													{
+//														setAMonths(dateArray[j]);
+//													}
+//												else
+//													{
+//														setADays(dateArray[j]);
+//													}
+//												j++;
+//												tempStr = "0";
+//												break;
+//											}
+//										break;
+//									default:
+//										tempStr += splitDate[i];
+//									}
+//							}
+//						tempInt = Integer.parseInt(tempStr);
+//						dateArray[j] = tempInt;
+//						setAYears(dateArray[j]);
+//					}
 			}
 		private void calculateDate()
 			{
@@ -285,6 +282,10 @@ public class TicklerScanApi
 										setFinalDays((getDays() + (getWeeks() * 7)));
 									}
 							}
+						else
+						{
+							setFinalDays(getDays() + (getWeeks()*7)); 
+						}
 						setFinalMonths(getFinalMonths() + getMonths());
 						/*
 						 * if months is 12 or above, the months will be translated to
@@ -298,7 +299,7 @@ public class TicklerScanApi
 										setFinalYears(getYears() + (getFinalMonths() / 12));
 										setFinalMonths(0);
 									}
-								setFinalYears(getYears() + ((getFinalMonths() / 12)));
+//								setFinalYears(getYears() + ((getFinalMonths() / 12)));
 								setFinalMonths((getFinalMonths() % 12));
 							}
 						else
@@ -341,8 +342,7 @@ public class TicklerScanApi
 						/*set absolutedate to DateTime, replace / with - if date is in US format*/
 						String tempStr = getAbsoluteDateStr().replaceAll("/", "-");
 						
-						if (getCountry() == "US")
-							{
+					
 								try
 									{
 										DateTime absoluteDateTime = dfm.parseDateTime(tempStr);
@@ -353,9 +353,7 @@ public class TicklerScanApi
 									{
 										logger.error("invalid absolute date.");
 									}
-							}
-						else
-							{
+						
 								try
 									{
 										//absoluteDateTime = new DateTime(getAYears(), getAMonths(), getADays(), 0, 0);
@@ -367,7 +365,7 @@ public class TicklerScanApi
 									{
 										logger.error("invalid absolute date.");
 									}
-							}
+							
 					}
 			}
 		/*
@@ -376,8 +374,9 @@ public class TicklerScanApi
 		private void findLocalDate()
 			{
 				changeLogStr("findLocalDate");
+				System.getProperty("sun.locale.formatasdefault", "true");
 				logger.debug("sun.locale.formatasdefault in debug configuration: "
-						+ System.getProperty("sun.locale.formatasdefault"));
+						+ System.getProperty("sun.locale.formatasdefault", "true"));
 				String locale = Locale.getDefault().getCountry();// get local. US or NL
 				logger.info("date format set for: " + locale);
 				setCountry(locale);
@@ -498,35 +497,35 @@ public class TicklerScanApi
 				this.years = years;
 			}
 
-		private int getADays()
-			{
-				return aDays;
-			}
+//		private int getADays()
+//			{
+//				return aDays;
+//			}
 
-		private void setADays(int adays)
-			{
-				aDays = adays;
-			}
-
-		private int getAMonths()
-			{
-				return aMonths;
-			}
-
-		private void setAMonths(int amonths)
-			{
-				aMonths = amonths;
-			}
-
-		private int getAYears()
-			{
-				return aYears;
-			}
-
-		private void setAYears(int ayears)
-			{
-				aYears = ayears;
-			}
+//		private void setADays(int adays)
+//			{
+//				aDays = adays;
+//			}
+//
+//		private int getAMonths()
+//			{
+//				return aMonths;
+//			}
+//
+//		private void setAMonths(int amonths)
+//			{
+//				aMonths = amonths;
+//			}
+//
+//		private int getAYears()
+//			{
+//				return aYears;
+//			}
+//
+//		private void setAYears(int ayears)
+//			{
+//				aYears = ayears;
+//			}
 
 		private int getFinalDays()
 			{
