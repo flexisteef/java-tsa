@@ -10,7 +10,7 @@ public class App
     {
         
         TicklerScanApi ticklerscan = new TicklerScanApi();
-        DateTime A = (ticklerscan.getTicklerDate("asda **33-33-2014"));
+        DateTime A = (ticklerscan.getTicklerDate("asda **2w"));
         System.out.println(A);
         Scanner sc = new Scanner(System.in);
         

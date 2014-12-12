@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ibb.seven.rcp.ticklers</groupId>
   <artifactId>TicklerScanApi</artifactId>
-  <version> - V3.0.1</version>
+  <version>- V3.0.2</version>
   <packaging>bundle</packaging>
   <name>TicklerScanApi</name>
   <url>http://maven.apache.org</url>
@@ -23,6 +23,7 @@
       <version>2.5</version>
     </dependency>
 <!--
+<dependencies>
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>maven-bundle-plugin</artifactId>
@@ -62,6 +63,12 @@
       <artifactId>xml-apis</artifactId>
       <version>2.0.2</version>
     </dependency>
+    <dependency>
+    	<groupId>org.apache.maven.plugins</groupId>
+    	<artifactId>maven-compiler-plugin</artifactId>
+    	<version>3.2</version>
+    	<type>maven-plugin</type>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -77,12 +84,15 @@
               <mainClass>com.ibb.seven.rcp.ticklers.TicklerScanApi.App</mainClass>
             </manifest>
           </archive>
+          <arguments>
+          <argument>-Dsun.locale.formatasdefault=true"</argument>
+          </arguments>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <dependencies>
+        
           <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>maven-bundle-plugin</artifactId>

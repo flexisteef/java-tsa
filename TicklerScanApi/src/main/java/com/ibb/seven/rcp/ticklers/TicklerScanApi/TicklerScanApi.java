@@ -6,13 +6,13 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
-
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ch.qos.logback.classic.LoggerContext;
 
 
@@ -25,7 +25,7 @@ import ch.qos.logback.classic.LoggerContext;
 public class TicklerScanApi
 	{
 		private String	RegexTickler		= "\\*\\*(([0-99])+([dD]|[wW]|[mM]|[yY])(([0-99]){1,}([wW]|[mM]|[yY]))?(([0-99]){1,}([mM]|[yY]))?(([0-99]){1,}[yY])?)";
-		private String	RegexAbsoluteDate	= "(\\*\\*[0-99]{1,}([-]|[\\/])[0-99]{1,}([-]|[\\/])\\d{4})";
+		private String	RegexAbsoluteDate	= "(\\*\\*[0-99]{1,}([-]|[\\/])[0-99]{1,}([-]|[\\/])\\d{2,4})";
 		private String	ticklerStr, absoluteDateStr, currentDate, country = null;
 
 		private int		days, weeks, months, years = 0;
@@ -55,7 +55,7 @@ public class TicklerScanApi
 						logger.debug(getTicklerStr());
 						
 						
-						findLocalDate();
+						//findLocalDate();  // bug. http://bugs.java.com/view_bug.do?bug_id=7082429
 						currentDate();
 						splitTickler();
 						calculateDate();
@@ -164,6 +164,7 @@ public class TicklerScanApi
 				char[] splitDate = new char[dateStr.length()];
 				splitDate = dateStr.toCharArray();
 				logger.debug("size of array:  " + dateStr.length());
+				logger.debug("Hier is tempAbsoluteStr {}", getAbsoluteDateStr());
 				if (getTicklerStr() != null)
 					{
 						dateArray = new int[(getTicklerStr().length() - (getTicklerStr().length() / 2))];
@@ -206,7 +207,47 @@ public class TicklerScanApi
 							}
 						System.out.println();
 					}
+				else if(getAbsoluteDateStr() != null)
 				
+				
+					
+					
+					if(getAbsoluteDateStr().length() <= 8)
+					{
+						int c = 0;
+						int count = 0;
+						while(count != 2)
+						{
+							
+								if(getAbsoluteDateStr().charAt(c) == '-')
+								{
+									count ++;
+								}
+								else if (getAbsoluteDateStr().charAt(c) == '/')
+								{
+									count ++;
+								}
+								if(count != 2)
+								{
+								c++;
+								}
+						}
+						int absoluteStrLength;
+						absoluteStrLength = (getAbsoluteDateStr().length()-1) - c;
+						if(absoluteStrLength <= 2)
+						{
+						String tempAbsoluteStr = "";
+						for(int i = 2; i >= 1; i--)
+						{
+						tempAbsoluteStr += getAbsoluteDateStr().charAt(getAbsoluteDateStr().length()-i);
+						}
+						String addStr = "20";
+						addStr += tempAbsoluteStr;
+						tempAbsoluteStr = getAbsoluteDateStr().replace(tempAbsoluteStr, addStr);
+						logger.debug("Hier is tempAbsoluteStr {}", tempAbsoluteStr);
+						setAbsoluteDateStr(tempAbsoluteStr);
+					}
+				}
 //					{
 //						splitDate = dateStr.toCharArray();
 //						dateArray = new int[getAbsoluteDateStr().length()];
@@ -310,9 +351,9 @@ public class TicklerScanApi
 		private void calculateDifference()
 			{
 				changeLogStr("calculateDifference");
-				final String formatStr = (getCountry() == "US") ? "MM-dd-yyyy" : "dd-MM-yyyy";
+				final String formatStr = (getCountry() == "en_GB") ? "MM-dd-yyyy" : "dd-MM-yyyy";
 				DateTimeFormatter dfm = DateTimeFormat.forPattern(formatStr);
-				dfm = (getCountry() == "US") ? dfm.withLocale(Locale.US) : dfm.withLocale(Locale.GERMAN);
+				dfm = (getCountry() == "en_GB") ? dfm.withLocale(Locale.US) : dfm.withLocale(Locale.GERMAN);
 				final DateTime currentDateTime = dfm.withOffsetParsed().parseDateTime(getCurrentDate());
 
 				if (getTicklerStr() != null)
@@ -373,13 +414,17 @@ public class TicklerScanApi
 		 */
 		private void findLocalDate()
 			{
+				System.getProperty("user.country"); 
+				System.getProperty("user.language");
+				Locale locale = Locale.getDefault(Locale.Category.FORMAT);
+				//Locale locale = Locale.getDefault(Locale.Category.DISPLAY);
 				changeLogStr("findLocalDate");
-				System.getProperty("sun.locale.formatasdefault", "true");
+				System.setProperty("sun.locale.formatasdefault", "true");
 				logger.debug("sun.locale.formatasdefault in debug configuration: "
 						+ System.getProperty("sun.locale.formatasdefault", "true"));
-				String locale = Locale.getDefault().getCountry();// get local. US or NL
+				//String locale = Locale.getDefault().getCountry();// get local. US or NL
 				logger.info("date format set for: " + locale);
-				setCountry(locale);
+				setCountry(locale.toString());
 			}
 
 		/*
@@ -389,7 +434,7 @@ public class TicklerScanApi
 		private void currentDate()  // method to get current date
 			{
 				changeLogStr("currentDate");
-				String dateFormat = (getCountry() == "US") ? "MM-dd-yyyy" : "dd-MM-yyyy";
+				String dateFormat = (getCountry() == "en_GB") ? "MM-dd-yyyy" : "dd-MM-yyyy";
 				setCurrentDate(new SimpleDateFormat(dateFormat).format(Calendar.getInstance().getTime()));
 				logger.info("current time: {}", getCurrentDate());
 			}
