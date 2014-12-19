@@ -73,8 +73,15 @@ public class CheckTicklerApi
 						if(getAbsoluteDateStr() != null)
 						{
 						newDate = updateTickler.getTicklerDate(note);
-						System.out.println("note : " + note + "new date is.. : " + newDate);
-						return (newDate.toString("dd-MM-yyyy")); 
+						if(newDate != null)
+						{
+							System.out.println("note : " + note + "new date is.. : " + newDate);
+						return (newDate.toString("dd-MM-yyyy"));
+						}
+						else
+						{
+							return null;
+						}
 						}
 						else if(getTicklerScanned() != null && newDate == null)
 						{
@@ -99,13 +106,20 @@ public class CheckTicklerApi
 					TicklerScanApi updateTickler = new TicklerScanApi();
 					newDate = updateTickler.getTicklerDate(note);
 					System.out.println("note : " + note + "new date is.. : " + newDate);
-					
+					if(newDate != null)
+					{
 					try {
+						
 						return (newDate.toString("dd-MM-yyyy"));
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 						System.out.println(e);
+						return null;
+					}
+					}
+					else
+					{
 						return null;
 					}
 //					TicklerScanApi updateTickler = new TicklerScanApi();
