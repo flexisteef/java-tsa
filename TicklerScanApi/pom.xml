@@ -2,10 +2,8 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ibb.seven.rcp.ticklers</groupId>
-  <artifactId>TicklerScanApi</artifactId>
-  <version>- V3.0.2</version>
-  <packaging>bundle</packaging>
-  <name>TicklerScanApi</name>
+  <artifactId>tickler-scan-api</artifactId>
+  <version>3.1.2</version>
   <url>http://maven.apache.org</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,6 +20,33 @@
       <artifactId>joda-time</artifactId>
       <version>2.5</version>
     </dependency>
+    		<dependency>
+			<groupId>eclipse</groupId>
+			<artifactId>eclipse-jface</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.swt</groupId>
+			<artifactId>jmx</artifactId>
+			<version>1.0.0-v20070510</version>
+		</dependency>
+		<dependency>
+			<groupId>swt</groupId>
+			<artifactId>jface</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+				<dependency>
+			<groupId>org.eclipse</groupId>
+			<artifactId>swt</artifactId>
+			<version>3.3.0-v3346</version>
+		</dependency>
+		<dependency>
+			<groupId>
+				org.eclipse.swt.org.eclipse.swt.win32.win32.x86_64.4.3.swt
+			</groupId>
+			<artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId>
+			<version>4.3</version>
+		</dependency>
 <!--
 <dependencies>
     <dependency>
@@ -134,10 +159,11 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Export-Package>com.ibb.seven.rcp.ticklers.TicklerScanApi</Export-Package>
+            <Export-Package>com.ibb.seven.rcp.ticklers.ticklerscanapi</Export-Package>
           </instructions>
         </configuration>
       </plugin>
     </plugins>
   </build>
+  <packaging>bundle</packaging>
 </project>

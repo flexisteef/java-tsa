@@ -6,6 +6,8 @@ import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ibb.seven.rcp.ticklers.ticklerscanapi.TicklerScanApi;
+
 public class TicklerScanApiTest
 {
 

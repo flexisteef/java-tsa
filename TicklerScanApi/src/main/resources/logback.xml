@@ -8,7 +8,7 @@
 			<level>INFO</level>
 		</filter>
 		<encoder>
-			<pattern>[%d{HH:mm:ss}]%-5level %logger{0} \t - %msg%n</pattern>
+			<pattern>%-5level: %logger{0} \t - %msg%n</pattern>
 		</encoder>
 	</appender>
 	<appender name="console-debug" class="ch.qos.logback.core.ConsoleAppender">
@@ -17,7 +17,7 @@
 
 		</filter>
 		<encoder>
-			<pattern>[%d{HH:mm}] - [%-5level] - %logger{0} \t - %msg %n</pattern>
+			<pattern>%-5level: %logger{0} \t - %msg %n</pattern>
 		</encoder>
 		
 	</appender>

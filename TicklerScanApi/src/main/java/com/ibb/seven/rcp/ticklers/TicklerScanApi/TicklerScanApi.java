@@ -1,4 +1,4 @@
-package com.ibb.seven.rcp.ticklers.TicklerScanApi;
+package com.ibb.seven.rcp.ticklers.ticklerscanapi;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.LoggerContext;
+
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Shell;
 
 
 
@@ -63,12 +66,18 @@ public class TicklerScanApi
 						
 //						 LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
 //						 StatusPrinter.print(lc);
-						LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-						loggerContext.stop();
+//						LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+//						loggerContext.stop();
 						return getNewDate();
 					}
 				else
 					{
+					Shell shell = new Shell();
+					// ask user to change tickler date.
+					MessageDialog dialog = new MessageDialog(shell, "Warning!", null,"No date found.",
+																MessageDialog.ERROR, new String[] {"Ok"}, 0);
+						int result = dialog.open();
+						System.out.println(result); 
 						logger.warn("No tickler and absolute date found.");
 						return null;
 					}
@@ -100,6 +109,7 @@ public class TicklerScanApi
 									{
 										result = currentLine;
 									}
+								
 							}
 						sc.close();
 						if (result != null)
@@ -164,7 +174,7 @@ public class TicklerScanApi
 				char[] splitDate = new char[dateStr.length()];
 				splitDate = dateStr.toCharArray();
 				logger.debug("size of array:  " + dateStr.length());
-				logger.debug("Hier is tempAbsoluteStr {}", getAbsoluteDateStr());
+				logger.debug("tempAbsoluteStr is {}", getAbsoluteDateStr());
 				if (getTicklerStr() != null)
 					{
 						dateArray = new int[(getTicklerStr().length() - (getTicklerStr().length() / 2))];
@@ -216,16 +226,23 @@ public class TicklerScanApi
 					{
 						int c = 0;
 						int count = 0;
+						int mode = 0;
 						while(count != 2)
 						{
 							
-								if(getAbsoluteDateStr().charAt(c) == '-')
+								if((getAbsoluteDateStr().charAt(c) == '-' && (mode == 0 | mode == 1) ))
 								{
 									count ++;
+									mode = 1;
 								}
-								else if (getAbsoluteDateStr().charAt(c) == '/')
+								else if ((getAbsoluteDateStr().charAt(c) == '/') && (mode == 0 | mode == 2) )
 								{
 									count ++;
+									mode = 2;
+								}
+								else if ((getAbsoluteDateStr().charAt(c) == '\n') && (count != 2))
+								{
+									setAbsoluteDateStr(null);
 								}
 								if(count != 2)
 								{
@@ -243,8 +260,13 @@ public class TicklerScanApi
 						}
 						String addStr = "20";
 						addStr += tempAbsoluteStr;
+						
+//						int ind = getAbsoluteDateStr().lastIndexOf(tempAbsoluteStr);
+//						tempAbsoluteStr = new StringBuilder(getAbsoluteDateStr()).replace(ind, ind+2,addStr).toString();
+					    System.out.println(tempAbsoluteStr);
+					    
 						tempAbsoluteStr = getAbsoluteDateStr().replace(tempAbsoluteStr, addStr);
-						logger.debug("Hier is tempAbsoluteStr {}", tempAbsoluteStr);
+						logger.debug("tempAbsoluteStr is {}", tempAbsoluteStr);
 						setAbsoluteDateStr(tempAbsoluteStr);
 					}
 				}
@@ -340,6 +362,11 @@ public class TicklerScanApi
 										setFinalYears(getYears() + (getFinalMonths() / 12));
 										setFinalMonths(0);
 									}
+								else
+								{
+									setFinalYears(getYears() + (getFinalMonths() / 12));
+									setFinalMonths(getFinalMonths() % 12);
+								}
 //								setFinalYears(getYears() + ((getFinalMonths() / 12)));
 								setFinalMonths((getFinalMonths() % 12));
 							}
