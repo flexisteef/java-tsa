@@ -6,18 +6,22 @@ import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.ibb.seven.rcp.ticklers.ticklerscanapi.CheckTicklerApi;
 import com.ibb.seven.rcp.ticklers.ticklerscanapi.TicklerScanApi;
 
 public class TicklerScanApiTest
+
 {
 
   TicklerScanApi ticklerScanApi;
+  CheckTicklerApi check = new CheckTicklerApi();
 
   @Before
   public void setup()
   {
     ticklerScanApi = new TicklerScanApi();
-  }
+	check = new CheckTicklerApi();
+	  }
 
   @Test
   public void testGetTicklerDate()
@@ -35,7 +39,7 @@ public class TicklerScanApiTest
     assertEquals(expectedDateTime, ticklerScanApi.getTicklerDate(noteText));
 
     noteText = "tekst er voor **3d en nog \n\n wat tekst er achter, maar ook met nog een tickler **2d";
-    expectedDateTime =  new DateTime().plusDays(3).withTimeAtStartOfDay();
+    expectedDateTime =  new DateTime().plusDays(2).withTimeAtStartOfDay();
   }
 
   @Test
@@ -121,5 +125,125 @@ public class TicklerScanApiTest
 	  
 	  assertEquals(expectedFormatStr, ticklerScanApi.getTicklerDate(noteText));
   }
+  @Test
+  public void testCalculateDifferenceInvalidAbsoluteDateTwo(){
+	  String noteText = "tekst er voor **1-11-11 en nog \n\n wat tekst er achter";
+	  DateTime expectedFormatStr = new DateTime().withDate(2011, 11, 01).withTimeAtStartOfDay();
+	  
+	  assertEquals(expectedFormatStr, ticklerScanApi.getTicklerDate(noteText));
+	  
+	  noteText = "tekst er voor **1-11-11 en nog \n\n wat tekst er achter **1-11-11";
+	  DateTime expectedDate = new DateTime().withDate(2011, 11, 01).withTimeAtStartOfDay();
+	  assertEquals(expectedDate, ticklerScanApi.getTicklerDate(noteText));
+  }
+  @Test
+  public void testAdjustYear(){
+	  String noteText = "tekst er voor **1-11-11 en nog \n\n wat tekst er achter **1/11/11";
+	  DateTime expectedDate = new DateTime().withDate(2011, 11, 01).withTimeAtStartOfDay();
+	  assertEquals(expectedDate, ticklerScanApi.getTicklerDate(noteText));
+  }
+  // -------------------------------------------------------------------------------
+  @Test
+  public void checkTicklerTest() {
+    String noteText = "tekst er voor **1d en nog \n\n wat tekst er achter";
+    String expected = "**1d";
+    String tempStr = check.check(noteText, null);
+    assertEquals(expected, check.check(noteText, null));
+
+    noteText = "tekst er voor **1d en nog \n\n wat tekst er achter";
+    String expectedDate =  "06-01-2015";
+    assertEquals(expectedDate, check.check(noteText, tempStr));
+    //assertEquals()
+    DateTime expectedDateTime = new DateTime().plusDays(1).withTimeAtStartOfDay();
+    assertEquals(expectedDateTime,check.toDate(expectedDate));
+  }
+  @Test
+  public void checkTicklerNoChangeTest() {
+    String noteText = "tekst er voor **1d en nog \n\n wat tekst er achter";
+    String expected = "**1d";
+    String tempStr = check.check(noteText, null);
+    assertEquals(expected, check.check(noteText, null));
+
+    noteText = "tekst er voor **1d en nog \n\n wat tekst er achter";
+    String expectedDate =  "06-01-2015";
+    assertEquals(expectedDate, check.check(noteText, tempStr));
+    //assertEquals()
+    DateTime expectedDateTime = new DateTime().plusDays(1).withTimeAtStartOfDay();
+    assertEquals(expectedDateTime,check.toDate(expectedDate));
+  }
+  
+  @Test
+  public void checkChangedTicklerTest() {
+    String noteText = "tekst er voor **1d en nog \n\n wat tekst er achter";
+    String expected = "**1d";
+    String tempStr = check.check(noteText, null);
+    assertEquals(expected, check.check(noteText, null));
+
+    noteText = "tekst er voor **2d en nog \n\n wat tekst er achter";
+    String expectedDate =  "07-01-2015";
+    assertEquals(expectedDate, check.check(noteText, tempStr));
+    //assertEquals()
+    DateTime expectedDateTime = new DateTime().plusDays(2).withTimeAtStartOfDay();
+    assertEquals(expectedDateTime,check.toDate(expectedDate));
+  }
+  @Test
+  public void checkAbsoluteTest() {
+    String noteText = "tekst er voor **1-11-11 en nog \n\n wat tekst er achter";
+    String expected = "01-11-2011";
+    String tempStr = check.check(noteText, null);
+    assertEquals(expected, check.check(noteText, null));
+
+    noteText = "tekst er voor **1-11-11 en nog \n\n wat tekst er achter";
+    String expectedDate =  "01-11-2011";
+    assertEquals(expectedDate, check.check(noteText, tempStr));
+    //assertEquals()
+    DateTime expectedDateTime = new DateTime().withDate(2011, 11, 01).withTimeAtStartOfDay();
+    assertEquals(expectedDateTime,check.toDate(expectedDate));
+  }
+  @Test
+  public void checkChangeddAbsoluteTest() {
+    String noteText = "tekst er voor **1-11-11 en nog \n\n wat tekst er achter";
+    String expected = "01-11-2011";
+    String tempStr = check.check(noteText, null);
+    assertEquals(expected, check.check(noteText, null));
+
+    noteText = "tekst er voor **1-11-12 en nog \n\n wat tekst er achter";
+    String expectedDate =  "01-11-2012";
+    assertEquals(expectedDate, check.check(noteText, tempStr));
+    //assertEquals()
+    DateTime expectedDateTime = new DateTime().withDate(2012, 11, 01).withTimeAtStartOfDay();
+    assertEquals(expectedDateTime,check.toDate(expectedDate));
+  }
+  @Test
+  public void checkChangeddTest() {
+    String noteText = "tekst er voor **1d en nog \n\n wat tekst er achter";
+    String expected = "**1d";
+    String tempStr = check.check(noteText, null);
+    assertEquals(expected, check.check(noteText, null));
+
+    noteText = "tekst er voor **1-11-12 en nog \n\n wat tekst er achter";
+    String expectedDate =  "01-11-2012";
+    assertEquals(expectedDate, check.check(noteText, tempStr));
+    //assertEquals()
+    DateTime expectedDateTime = new DateTime().withDate(2012, 11, 01).withTimeAtStartOfDay();
+    assertEquals(expectedDateTime,check.toDate(expectedDate));
+  }
+
+  @Test
+  public void checkNoParameterTest() {
+	    String noteText = "tekst er voor  en nog \n\n wat tekst er achter";
+	    String expected = null;
+	    String tempStr = check.check(noteText, null);
+	    assertEquals(expected, check.check(noteText, null));
+
+	    noteText = "tekst er voor  en nog \n\n wat tekst er achter";
+	    String expectedDate =  null;
+	    assertEquals(expectedDate, check.check(noteText, tempStr));
+	    //assertEquals()
+	    
+	    assertEquals(null,check.toDate(expectedDate));
+	  }
+  
+  
   
 }
